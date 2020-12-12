@@ -21,7 +21,7 @@ private:
 	std::vector<double> eigenpolyval;
 	std::vector<double> sum_cost;
 	double cross_pos, cross_rate, mutate_pos, mutate_rate;
-	double eps = 1e-6;
+	double eps = 1e-3, eps2=1e-3;
 public:
 
 	double upper_bound, lower_bound;
@@ -30,13 +30,13 @@ public:
 	Eigenvalue(const Matrix&, const int&, const int&, const double&, const double&, const double&, const double&);
 	~Eigenvalue()=default;
 
-	friend void initiallize(Eigenvalue);
+	void initiallize(std::mt19937, std::uniform_real_distribution<double>);
 	double solve_eigenpolyval(double x);
-	friend void solve_total(Eigenvalue);
+	void solve_total();
 	int choose(double);
-	friend void mutate(Eigenvalue, int, bool, double);
-	friend void crossover(Eigenvalue, int, int, bool);
-	friend void produce_next(Eigenvalue, std::mt19937, std::uniform_real_distribution<double>);
+	void mutate(int, bool, double);
+	void crossover(int, int, bool);
+	void produce_next(std::mt19937, std::uniform_real_distribution<double>);
 	void solve_eigenvalue();
 };
 

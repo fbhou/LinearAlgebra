@@ -22,86 +22,90 @@ Eigenvalue::Eigenvalue(const Matrix& source, const int& size, const int& max_gen
 	this->mutate_rate = mutate_rate;
 }
 
-void initiallize(Eigenvalue e) {
-	e.generation = 0;
-	e.parents.clear(); e.children.clear();
-	e.eigenpolyval.clear(); e.sum_cost.clear();
-	e.upper_bound = 0.0;
-	for (int i = 0; i < e.source.get_row(); i++) {
-		for (int j = 0; j < e.source.get_column(); j++) {
-			e.upper_bound += std::fabs(e.source(i,j));
+void Eigenvalue::initiallize(std::mt19937 gen, std::uniform_real_distribution<double> u) {
+	generation = 0;
+	parents.clear(); children.clear();
+	eigenpolyval.clear(); sum_cost.clear();
+	upper_bound = 0.0;
+	for (int i = 0; i < source.get_row(); i++) {
+		for (int j = 0; j < source.get_column(); j++) {
+			upper_bound += std::fabs(source(i,j));
 		}
 	}
-	e.lower_bound = -e.upper_bound;
-	e.answers.clear();
+	lower_bound = -upper_bound;
+	answers.clear();
+	for (int i = 0; i < size; i++) {
+		parents.push_back(u(gen)*(upper_bound-lower_bound)+lower_bound);
+	}
 }
 double Eigenvalue::solve_eigenpolyval(double lam) {
-	tmp = source;
-	for (int i = 0; i < source.get_row(); i++) {
-		tmp(i, i) -= lam;
-	}
-	return std::fabs(tmp.determinant());
+	return std::fabs((source-lam*identity_matrix(source.get_column())).determinant());
 }
-void solve_total(Eigenvalue e) {
+void Eigenvalue::solve_total() {
 	double max_eigenpolyval = 0.0;
-	e.eigenpolyval.clear(); e.sum_cost.clear();
-	for (int i = 0; i < e.size; i++) {
-		e.eigenpolyval.push_back(e.solve_eigenpolyval(e.parents[i]));
-		if (e.eigenpolyval[i] > max_eigenpolyval) max_eigenpolyval = e.eigenpolyval[i];
+	eigenpolyval.clear(); sum_cost.clear();
+	for (int i = 0; i < size; i++) {
+		eigenpolyval.push_back(solve_eigenpolyval(parents[i]));
+		if (eigenpolyval[i] > max_eigenpolyval) max_eigenpolyval = eigenpolyval[i];
 	}
-	e.sum_cost.push_back(e.eigenpolyval[0]);
-	for (int i = 1; i < e.size; i++) {
-		e.sum_cost.push_back(max_eigenpolyval-e.eigenpolyval[i]);
+	sum_cost.push_back(max_eigenpolyval - eigenpolyval[0]);
+	for (int i = 1; i < size; i++) {
+		sum_cost.push_back(sum_cost[i-1] + max_eigenpolyval - eigenpolyval[i]);
 	}
 }
 int Eigenvalue::choose(double proportion) {
-	for (int i = 0; i < size; i++) if (sum_cost[i] > proportion * sum_cost[size - 1]) return i;
+	for (int i = 0; i < size; i++) {
+		if (sum_cost[i] > proportion * sum_cost[size - 1]) return i;
+	}
 }
-void mutate(Eigenvalue e, int idx, bool opt, double ran) {
-	double tmp = e.children[idx];
+void Eigenvalue::mutate(int idx, bool opt, double ran) {
+	double tmp = children[idx];
 	if (opt) {
-		e.children[idx] += (e.upper_bound - tmp) * (1.0 - std::pow(ran, e.mutate_rate * (double)e.generation / e.max_generation));
+		children[idx] += (upper_bound - tmp) * (1.0 - std::pow(ran, mutate_rate * (double)generation / max_generation));
 	}
 	else {
-		e.children[idx] += (tmp - e.lower_bound) * (1.0 - std::pow(ran, e.mutate_rate * (double)e.generation / e.max_generation));
+		children[idx] -= (tmp - lower_bound) * (1.0 - std::pow(ran, mutate_rate * (double)generation / max_generation));
 	}
 }
-void crossover(Eigenvalue e, int ida, int idb, bool opt) {
+void Eigenvalue::crossover(int ida, int idb, bool opt) {
 	if (opt) {
-		e.children.push_back(e.cross_rate * e.parents[idb] + (1.0 - e.cross_rate) * e.parents[ida]);
-		e.children.push_back(e.cross_rate * e.parents[ida] + (1.0 - e.cross_rate) * e.parents[idb]);
+		children.push_back(cross_rate * parents[idb] + (1.0 - cross_rate) * parents[ida]);
+		children.push_back(cross_rate * parents[ida] + (1.0 - cross_rate) * parents[idb]);
 	}
 	else {
-		e.children.push_back(e.parents[ida]);
-		e.children.push_back(e.parents[idb]);
+		children.push_back(parents[ida]);
+		children.push_back(parents[idb]);
 	}
 }
-void produce_next(Eigenvalue e, std::mt19937 gen, std::uniform_real_distribution<double> u) {
-	e.children.clear();
-	e.generation++;
-	solve_total(e);
+void Eigenvalue::produce_next(std::mt19937 gen, std::uniform_real_distribution<double> u) {
+	children.clear();
+	generation++;
+	solve_total();
 	int ida, idb;
-	for (int i = 0; i < (e.size >> 1); i++) {
-		ida = e.choose(u(gen));
-		idb = e.choose(u(gen));
-		crossover(e, ida, idb, u(gen)<e.cross_pos);
+	for (int i = 0; i < (size >> 1); i++) {
+		ida = choose(u(gen));
+		idb = choose(u(gen));
+		crossover(ida, idb, u(gen)<cross_pos);
 	}
-	for (int i = 0; i < e.size; i++) if (u(gen) < e.mutate_pos) {
-		mutate(e,i,u(gen)<0.5,u(gen));
+	for (int i = 0; i < size; i++) if (u(gen) < mutate_pos) {
+		mutate(i,u(gen)<0.5,u(gen));
 	}
-	std::swap(e.parents, e.children);
+	std::swap(parents, children);
 }
 void Eigenvalue::solve_eigenvalue() {
 	std::mt19937 gen(time(NULL));
 	std::uniform_real_distribution<double> u(0.0, 1.0);
 	if (source.get_column() != source.get_row()) {
-		std::cerr << "Baka!! Non-square matrices have no eigenvalue!!" << std::endl;
+		std::cerr << "[ERROR]Non-square matrices have no eigenvalue!!" << std::endl;
 		return;
 	}
-	initiallize(*this);
+	initiallize(gen,u);
+	for (int i = 0; i < max_generation; i++) {
+		produce_next(gen, u);
+	}
 	std::sort(parents.begin(), parents.end());
-	answers.push_back(parents[0]);
-	for (int i = 1; i < size; i++) if(parents[i]-*answers.end() > eps){
-		answers.push_back(parents[i]);
+
+	for (int i = 0; i < size; i++) {
+		if (solve_eigenpolyval(parents[i]) < eps2&&(answers.empty()||parents[i]-*(answers.end()-1)>eps))	answers.push_back(parents[i]);
 	}
 }
