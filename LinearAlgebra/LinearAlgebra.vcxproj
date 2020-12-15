@@ -140,7 +140,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="evolution.cpp" />
+    <ClCompile Include="GA.cpp" />
     <ClCompile Include="linearvector.cpp" />
     <ClCompile Include="matrix.cpp" />
     <ClCompile Include="main.cpp" />
@@ -148,7 +148,7 @@
     <ClCompile Include="QuetionB.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="evolution.h" />
+    <ClInclude Include="GA.h" />
     <ClInclude Include="linearvector.h" />
     <ClInclude Include="matrix.h" />
     <ClInclude Include="QuetionA.h" />

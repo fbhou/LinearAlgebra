@@ -21,7 +21,7 @@ private:
 	std::vector<double> eigenpolyval;
 	std::vector<double> sum_cost;
 	double cross_pos, cross_rate, mutate_pos, mutate_rate;
-	double eps = 1e-3, eps2=1e-3;
+	double eps = 1e-3, eps2=1e-2;
 public:
 
 	double upper_bound, lower_bound;

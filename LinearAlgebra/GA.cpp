@@ -1,7 +1,7 @@
 #include"linearvector.h"
 #include"matrix.h"
 #include"QuetionA.h"
-#include"evolution.h"
+#include"GA.h"
 
 /*
 source: The Matrix object you want to solve;

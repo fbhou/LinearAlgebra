@@ -26,7 +26,7 @@
     <ClCompile Include="QuetionB.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="evolution.cpp">
+    <ClCompile Include="GA.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -43,7 +43,7 @@
     <ClInclude Include="QuetionB.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="evolution.h">
+    <ClInclude Include="GA.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
